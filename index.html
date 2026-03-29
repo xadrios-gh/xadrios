@@ -1,1 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xadrios DEV | Fullstack Architect</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/TextPlugin.min.js"></script>
+    
+    <!-- Three.js for 3D background -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Prism.js for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap');
+        
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-pink: #ff00ff;
+            --neon-green: #00ff41;
+            --dark-bg: #050505;
+            --grid-color: rgba(0, 243, 255, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: var(--dark-bg);
+            color: #e0e0e0;
+            font-family: 'Fira Code', monospace;
+            overflow-x: hidden;
+            cursor: none;
+        }
+        
+        /* Custom Cursor */
+        .cursor-dot,
+        .cursor-outline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        
+        .cursor-dot {
+            width: 5px;
+            height: 5px;
+            background: var(--neon-cyan);
+        }
+        
+        .cursor-outline {
+            width: 30px;
+            height: 30px;
+            border: 2px solid var(--neon-cyan);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+        
+        .cursor-outline.hover {
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 243, 255, 0.1);
+            border-color: var(--neon-pink);
+        }
+        
+        /* Scanline Effect */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            z-index: 9998;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+        
+        /* CRT Flicker */
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            5% { opacity: 0.95; }
+            10% { opacity: 0.9; }
+            15% { opacity: 0.95; }
+            20% { opacity: 0.99; }
+            50% { opacity: 0.95; }
+            80% { opacity: 0.9; }
+            100% { opacity: 0.97; }
+        }
+        
+        .crt-flicker {
+            animation: flicker 0.15s infinite;
+        }
+        
+        /* Glitch Effect */
+        .glitch {
+            position: relative;
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .glitch::before {
+            left: 2px;
+            text-shadow: -2px 0 var(--neon-pink);
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+        
+        .glitch::after {
+            left: -2px;
+            text-shadow: -2px 0 var(--neon-cyan);
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim 2.5s infinite linear alternate-reverse;
+        }
+        
+        @keyframes glitch-anim {
+            0% { clip: rect(10px, 9999px, 85px, 0); }
+            20% { clip: rect(63px, 9999px, 130px, 0); }
+            40% { clip: rect(25px, 9999px, 15px, 0); }
+            60% { clip: rect(88px, 9999px, 95px, 0); }
+            80% { clip: rect(43px, 9999px, 60px, 0); }
+            100% { clip: rect(15px, 9999px, 120px, 0); }
+        }
+        
+        @keyframes glitch-anim-2 {
+            0% { clip: rect(65px, 9999px, 100px, 0); }
+            20% { clip: rect(20px, 9999px, 35px, 0); }
+            40% { clip: rect(90px, 9999px, 110px, 0); }
+            60% { clip: rect(40px, 9999px, 55px, 0); }
+            80% { clip: rect(15px, 9999px, 80px, 0); }
+            100% { clip: rect(70px, 9999px, 95px, 0); }
+        }
+        
+        /* Terminal Styles */
+        .terminal {
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+            font-family: 'Fira Code', monospace;
+        }
+        
+        .terminal-input {
+            background: transparent;
+            border: none;
+            color: var(--neon-green);
+            font-family: inherit;
+            outline: none;
+            width: 100%;
+        }
+        
+        .terminal-line {
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+        
+        .terminal-prompt {
+            color: var(--neon-cyan);
+        }
+        
+        .terminal-command {
+            color: #fff;
+        }
+        
+        .terminal-output {
+            color: #aaa;
+            margin-left: 20px;
+        }
+        
+        .terminal-error {
+            color: #ff4444;
+        }
+        
+        .terminal-success {
+            color: var(--neon-green);
+        }
+        
+        /* Matrix Canvas */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+        
+        /* Skill Bars */
+        .skill-bar {
+            background: rgba(255,255,255,0.1);
+            height: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .skill-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+            box-shadow: 0 0 10px var(--neon-cyan);
+            width: 0%;
+            transition: width 1.5s ease-out;
+        }
+        
+        /* Card Hover Effect */
+        .project-card {
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .project-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .project-card:hover::before {
+            left: 100%;
+        }
+        
+        .project-card:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
+            transform: translateY(-5px);
+        }
+        
+        /* Typing Effect */
+        .typing-cursor::after {
+            content: '█';
+            animation: blink 1s infinite;
+            color: var(--neon-cyan);
+            margin-left: 2px;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        /* Binary Background */
+        .binary-bg {
+            position: absolute;
+            font-size: 12px;
+            color: rgba(0, 243, 255, 0.05);
+            pointer-events: none;
+            user-select: none;
+            z-index: -1;
+        }
+        
+        /* Nav Link Effect */
+        .nav-link {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--neon-cyan);
+            transition: width 0.3s;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        /* Grid Background */
+        .cyber-grid {
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            perspective: 1000px;
+            transform-style: preserve-3d;
+        }
+        
+        .hacker-mode {
+            filter: hue-rotate(120deg) contrast(1.2);
+        }
+        
+        .konami-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--neon-pink);
+            color: #000;
+            padding: 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            z-index: 10000;
+            transform: translateX(400px);
+            box-shadow: 0 0 30px var(--neon-pink);
+        }
+    </style>
+</head>
+<body class="antialiased">
 
+    <!-- Custom Cursor -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+    
+    <!-- Scanlines Overlay -->
+    <div class="scanlines"></div>
+    
+    <!-- Matrix Background -->
+    <canvas id="matrix-canvas"></canvas>
+    
+    <!-- Cyber Grid -->
+    <div class="cyber-grid"></div>
+    
+    <!-- Konami Toast -->
+    <div class="konami-toast" id="konami-toast">
+        🎮 GOD MODE ACTIVATED
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-cyan-500/20">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold text-cyan-400 font-['Orbitron'] tracking-wider glitch" data-text="XADRIOS_DEV">
+                XADRIOS_DEV
+            </div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#home" class="nav-link text-gray-300 hover:text-cyan-400 transition-colors">~/home</a>
+                <a href="#terminal" class="nav-link text-gray-300 hover:text-cyan-400 transition-colors">~/terminal</a>
+                <a href="#skills" class="nav-link text-gray-300 hover:text-cyan-400 transition-colors">~/stack</a>
+                <a href="#projects" class="nav-link text-gray-300 hover:text-cyan-400 transition-colors">~/projects</a>
+                <button id="hacker-mode-toggle" class="text-xs border border-green-500 text-green-500 px-3 py-1 rounded hover:bg-green-500 hover:text-black transition-all">
+                    [ROOT_ACCESS]
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="min-h-screen flex items-center justify-center relative overflow-hidden pt-20">
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="max-w-4xl">
+                <div class="mb-4 text-green-400 text-sm tracking-widest opacity-0" id="hero-subtitle">
+                    > INITIALIZING_FULLSTACK_PROTOCOL...
+                </div>
+                <h1 class="text-5xl md:text-8xl font-bold mb-6 leading-tight">
+                    <span class="block text-white opacity-0 hero-text">BUILDING</span>
+                    <span class="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-pink-500 opacity-0 hero-text glitch" data-text="DIGITAL_REALITIES">
+                        DIGITAL_REALITIES
+                    </span>
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-400 mb-8 max-w-2xl opacity-0 hero-text typing-cursor" id="hero-desc">
+                    Fullstack Architect • Code Alchemist • Bug Hunter
+                </p>
+                <div class="flex gap-4 opacity-0 hero-text">
+                    <button onclick="document.getElementById('terminal').scrollIntoView({behavior: 'smooth'})" 
+                            class="px-8 py-4 bg-cyan-500/10 border border-cyan-500 text-cyan-400 hover:bg-cyan-500 hover:text-black transition-all duration-300 font-bold tracking-wider relative overflow-hidden group">
+                        <span class="relative z-10">> ACCESS_TERMINAL</span>
+                        <div class="absolute inset-0 bg-cyan-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
+                    </button>
+                    <button onclick="document.getElementById('projects').scrollIntoView({behavior: 'smooth'})"
+                            class="px-8 py-4 border border-pink-500 text-pink-500 hover:bg-pink-500 hover:text-black transition-all duration-300 font-bold tracking-wider">
+                        > VIEW_STACK
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Floating Code Snippets -->
+        <div class="absolute right-10 top-1/4 w-96 opacity-30 hidden lg:block" id="floating-code">
+            <pre class="text-xs text-cyan-300"><code class="language-javascript">const xadrios = {
+  stack: ['React', 'Node', 'Rust'],
+  status: 'Compiling...',
+  coffee: Infinity
+};</code></pre>
+        </div>
+    </section>
+
+    <!-- Interactive Terminal Section -->
+    <section id="terminal" class="py-20 relative">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-3xl font-bold mb-8 text-cyan-400 font-['Orbitron']">
+                    <span class="text-pink-500">$</span> INTERACTIVE_SHELL
+                </h2>
+                <div class="terminal rounded-lg p-6 min-h-[400px] relative crt-flicker" id="terminal-window">
+                    <div class="flex items-center gap-2 mb-4 border-b border-gray-700 pb-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span class="ml-4 text-xs text-gray-500">xadrios@dev: ~/portfolio</span>
+                    </div>
+                    <div id="terminal-content" class="space-y-2 font-mono text-sm max-h-[300px] overflow-y-auto">
+                        <div class="terminal-line">
+                            <span class="terminal-prompt">xadrios@dev:~$</span>
+                            <span class="terminal-command">welcome</span>
+                        </div>
+                        <div class="terminal-output">
+                            Welcome to Xadrios DEV v2.0.66<br>
+                            Type 'help' for available commands.<br>
+                            Current session: <span id="session-id"></span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-4">
+                        <span class="terminal-prompt">xadrios@dev:~$</span>
+                        <input type="text" id="terminal-input" class="terminal-input" placeholder="Type command..." autocomplete="off">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Matrix -->
+    <section id="skills" class="py-20 relative">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl font-bold mb-12 text-center text-cyan-400 font-['Orbitron']">
+                <span class="text-pink-500">&lt;</span> TECH_STACK <span class="text-pink-500">/&gt;</span>
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <!-- Frontend -->
+                <div class="bg-black/50 border border-cyan-500/30 p-6 rounded-lg backdrop-blur-sm">
+                    <h3 class="text-xl font-bold mb-6 text-cyan-400 flex items-center gap-2">
+                        <span class="text-2xl">⌘</span> FRONTEND_ARCHITECTURE
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="skill-item">
+                            <div class="flex justify-between mb-1">
+                                <span>React/Next.js</span>
+                                <span class="text-cyan-400">95%</span>
+                            </div>
+                            <div class="skill-bar"><div class="skill-fill" data-width="95"></div></div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="flex justify-between mb-1">
+                                <span>TypeScript</span>
+                                <span class="text-cyan-400">92%</span>
+                            </div>
+                            <div class="skill-bar"><div class="skill-fill" data-width="92"></div></div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="flex justify-between mb-1">
+                                <span>Three.js/WebGL</span>
+                                <span class="text-cyan-400">88%</span>
+                            </div>
+                            <div class="skill-bar"><div class="skill-fill" data-width="88"></div></div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="flex justify-between mb-1">
+                                <span>Tailwind/Styled</span>
+                                <span class="text-cyan-400">90%</span>
+                            </div>
+                            <div class="skill-bar"><div class="skill-fill" data-width="90"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backend -->
+                <div class="bg-black/50 border border-pink-500/30 p-6 rounded-lg backdrop-blur-sm">
+                    <h3 class="text-xl font-bold mb-6 text-pink-400 flex items-center gap-2">
+                        <span class="text-2xl">⚡</span> BACKEND_SYSTEMS
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="skill-item">
+                            <div class="flex justify-between mb-1">
+                                <span>Node.js/Express</span>
+                                <span class="text-pink-400">93%</span>
+                            </div>
+                            <div class="skill-bar"><div class="skill-fill" data-width="93"></div></div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="flex justify-between mb-1">
+                                <span>PostgreSQL/Mongo</span>
+                                <span class="text-pink-400">89%</span>
+                            </div>
+                            <div class="skill-bar"><div class="skill-fill" data-width="89"></div></div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="flex justify-between mb-1">
+                                <span>Rust/Go</span>
+                                <span class="text-pink-400">85%</span>
+                            </div>
+                            <div class="skill-bar"><div class="skill-fill" data-width="85"></div></div>
+                        </div>
+                        <div class="skill-item">
+                            <div class="flex justify-between mb-1">
+                                <span>AWS/Docker</span>
+                                <span class="text-pink-400">87%</span>
+                            </div>
+                            <div class="skill-bar"><div class="skill-fill" data-width="87"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DevOps Grid -->
+            <div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+                <div class="bg-gray-900/50 p-4 rounded text-center border border-gray-700 hover:border-cyan-500 transition-colors group">
+                    <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">🐳</div>
+                    <div class="text-sm text-gray-400">Docker</div>
+                </div>
+                <div class="bg-gray-900/50 p-4 rounded text-center border border-gray-700 hover:border-cyan-500 transition-colors group">
+                    <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">☸️</div>
+                    <div class="text-sm text-gray-400">Kubernetes</div>
+                </div>
+                <div class="bg-gray-900/50 p-4 rounded text-center border border-gray-700 hover:border-cyan-500 transition-colors group">
+                    <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">🔄</div>
+                    <div class="text-sm text-gray-400">CI/CD</div>
+                </div>
+                <div class="bg-gray-900/50 p-4 rounded text-center border border-gray-700 hover:border-cyan-500 transition-colors group">
+                    <div class="text-2xl mb-2 group-hover:scale-110 transition-transform">🌐</div>
+                    <div class="text-sm text-gray-400">GraphQL</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects" class="py-20 relative">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl font-bold mb-12 text-center text-cyan-400 font-['Orbitron']">
+                <span class="text-pink-500">[</span> DEPLOYED_ARCHIVES <span class="text-pink-500">]</span>
+            </h2>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                <!-- Project 1 -->
+                <div class="project-card rounded-lg p-6 group cursor-pointer">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="text-4xl">🧠</div>
+                        <div class="flex gap-2">
+                            <span class="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded">AI</span>
+                            <span class="text-xs bg-pink-500/20 text-pink-400 px-2 py-1 rounded">React</span>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 text-white group-hover:text-cyan-400 transition-colors">NeuralCommerce</h3>
+                    <p class="text-gray-400 text-sm mb-4">E-commerce platform with AI-powered recommendations and real-time inventory management.</p>
+                    <div class="flex gap-2 text-xs text-gray-500 font-mono">
+                        <span>▣ 2.4k commits</span>
+                        <span>⚡ 99.9% uptime</span>
+                    </div>
+                </div>
+
+                <!-- Project 2 -->
+                <div class="project-card rounded-lg p-6 group cursor-pointer">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="text-4xl">🔗</div>
+                        <div class="flex gap-2">
+                            <span class="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded">Blockchain</span>
+                            <span class="text-xs bg-pink-500/20 text-pink-400 px-2 py-1 rounded">Rust</span>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 text-white group-hover:text-cyan-400 transition-colors">ChainVault</h3>
+                    <p class="text-gray-400 text-sm mb-4">Decentralized storage solution with zero-knowledge proofs and smart contract automation.</p>
+                    <div class="flex gap-2 text-xs text-gray-500 font-mono">
+                        <span>▣ 1.8k commits</span>
+                        <span>🔒 Audited</span>
+                    </div>
+                </div>
+
+                <!-- Project 3 -->
+                <div class="project-card rounded-lg p-6 group cursor-pointer">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="text-4xl">🎮</div>
+                        <div class="flex gap-2">
+                            <span class="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded">WebGL</span>
+                            <span class="text-xs bg-pink-500/20 text-pink-400 px-2 py-1 rounded">Three.js</span>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 text-white group-hover:text-cyan-400 transition-colors">CyberVerse</h3>
+                    <p class="text-gray-400 text-sm mb-4">Browser-based metaverse with real-time multiplayer and procedural world generation.</p>
+                    <div class="flex gap-2 text-xs text-gray-500 font-mono">
+                        <span>▣ 3.1k commits</span>
+                        <span>👥 50k+ users</span>
+                    </div>
+                </div>
+
+                <!-- Project 4 -->
+                <div class="project-card rounded-lg p-6 group cursor-pointer">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="text-4xl">📡</div>
+                        <div class="flex gap-2">
+                            <span class="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded">IoT</span>
+                            <span class="text-xs bg-pink-500/20 text-pink-400 px-2 py-1 rounded">Go</span>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 text-white group-hover:text-cyan-400 transition-colors">SensorNet</h3>
+                    <p class="text-gray-400 text-sm mb-4">Distributed IoT monitoring system processing 1M+ events/sec with edge computing.</p>
+                    <div class="flex gap-2 text-xs text-gray-500 font-mono">
+                        <span>▣ 890 commits</span>
+                        <span>📊 Big Data</span>
+                    </div>
+                </div>
+
+                <!-- Project 5 -->
+                <div class="project-card rounded-lg p-6 group cursor-pointer">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="text-4xl">🔮</div>
+                        <div class="flex gap-2">
+                            <span class="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded">ML</span>
+                            <span class="text-xs bg-pink-500/20 text-pink-400 px-2 py-1 rounded">Python</span>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 text-white group-hover:text-cyan-400 transition-colors">PredictaCore</h3>
+                    <p class="text-gray-400 text-sm mb-4">Predictive analytics engine using transformer models for financial forecasting.</p>
+                    <div class="flex gap-2 text-xs text-gray-500 font-mono">
+                        <span>▣ 1.2k commits</span>
+                        <span>🎯 94% accuracy</span>
+                    </div>
+                </div>
+
+                <!-- Project 6 -->
+                <div class="project-card rounded-lg p-6 group cursor-pointer">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="text-4xl">🛡️</div>
+                        <div class="flex gap-2">
+                            <span class="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded">Security</span>
+                            <span class="text-xs bg-pink-500/20 text-pink-400 px-2 py-1 rounded">Rust</span>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 text-white group-hover:text-cyan-400 transition-colors">CipherGuard</h3>
+                    <p class="text-gray-400 text-sm mb-4">Zero-trust security framework with quantum-resistant encryption algorithms.</p>
+                    <div class="flex gap-2 text-xs text-gray-500 font-mono">
+                        <span>▣ 2.0k commits</span>
+                        <span>🔐 NSA-proof</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 relative">
+        <div class="container mx-auto px-6 max-w-4xl">
+            <div class="bg-black/80 border border-cyan-500/30 rounded-lg p-8 backdrop-blur-md">
+                <h2 class="text-3xl font-bold mb-8 text-center text-cyan-400 font-['Orbitron']">
+                    <span class="text-pink-500">~</span> ESTABLISH_CONNECTION
+                </h2>
+                
+                <form class="space-y-6" id="contact-form">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2 font-mono">identity_alias:</label>
+                            <input type="text" class="w-full bg-gray-900 border border-gray-700 rounded p-3 text-white focus:border-cyan-500 focus:outline-none transition-colors" placeholder="john_doe">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2 font-mono">comm_channel:</label>
+                            <input type="email" class="w-full bg-gray-900 border border-gray-700 rounded p-3 text-white focus:border-cyan-500 focus:outline-none transition-colors" placeholder="john@domain.com">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2 font-mono">packet_data:</label>
+                        <textarea rows="5" class="w-full bg-gray-900 border border-gray-700 rounded p-3 text-white focus:border-cyan-500 focus:outline-none transition-colors font-mono" placeholder="Enter your message here..."></textarea>
+                    </div>
+                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-cyan-500 to-pink-500 text-black font-bold tracking-wider hover:opacity-90 transition-opacity rounded relative overflow-hidden group">
+                        <span class="relative z-10">> TRANSMIT_DATA_PACKET</span>
+                        <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 py-8 mt-20">
+        <div class="container mx-auto px-6 text-center text-gray-500 text-sm font-mono">
+            <p class="mb-2">© 2026 Xadrios_DEV | Compiled with ❤️ and ☕</p>
+            <p class="text-xs text-gray-600">Last deployment: <span id="last-deploy"></span></p>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize GSAP
+        gsap.registerPlugin(ScrollTrigger, TextPlugin);
+
+        // Custom Cursor
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+        
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
+            
+            cursorDot.style.left = `${posX}px`;
+            cursorDot.style.top = `${posY}px`;
+            
+            cursorOutline.animate({
+                left: `${posX}px`,
+                top: `${posY}px`
+            }, { duration: 500, fill: "forwards" });
+        });
+
+        // Hover effect for cursor
+        document.querySelectorAll('a, button, .project-card').forEach(el => {
+            el.addEventListener('mouseenter', () => cursorOutline.classList.add('hover'));
+            el.addEventListener('mouseleave', () => cursorOutline.classList.remove('hover'));
+        });
+
+        // Hero Animations
+        const heroTl = gsap.timeline();
+        heroTl.to('#hero-subtitle', { opacity: 1, duration: 0.5, delay: 0.5 })
+              .to('.hero-text', { opacity: 1, y: 0, duration: 0.8, stagger: 0.2, ease: "power3.out" }, "-=0.3");
+
+        // Glitch effect randomization
+        setInterval(() => {
+            const glitch = document.querySelector('.glitch');
+            glitch.style.textShadow = `${Math.random() * 4 - 2}px 0 #ff00ff, ${Math.random() * 4 - 2}px 0 #00f3ff`;
+        }, 100);
+
+        // Matrix Rain Effect
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const matrix = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%+-/~{[|`]}日本語アイウエオカキクケコ";
+        const matrixArray = matrix.split("");
+        
+        const fontSize = 10;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+        
+        for(let i = 0; i < columns; i++) {
+            drops[i] = Math.random() * -100;
+        }
+        
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#0F0';
+            ctx.font = fontSize + 'px monospace';
+            
+            for(let i = 0; i < drops.length; i++) {
+                const text = matrixArray[Math.floor(Math.random() * matrixArray.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                
+                if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        
+        setInterval(drawMatrix, 35);
+        
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Terminal Logic
+        const terminalInput = document.getElementById('terminal-input');
+        const terminalContent = document.getElementById('terminal-content');
+        const sessionId = Math.random().toString(36).substring(7);
+        document.getElementById('session-id').textContent = sessionId;
+        
+        const commands = {
+            help: () => `Available commands:\n  about       - System information\n  skills      - List technical arsenal\n  contact     - Communication protocols\n  clear       - Clear terminal\n  date        - Current system time\n  hack        - [REDACTED]`,
+            about: () => `XADRIOS_DEV v2.0.66\nFullstack Architect specializing in:\n  • High-performance web applications\n  • Distributed systems\n  • AI integration\n  • Blockchain solutions\n\nLocation: Cyberspace\nStatus: Available for contracts`,
+            skills: () => `Core Technologies:\n  Frontend:  React, TypeScript, Three.js\n  Backend:   Node.js, Rust, Go\n  Database:  PostgreSQL, MongoDB, Redis\n  DevOps:    Docker, K8s, AWS, CI/CD\n  Other:     GraphQL, WebRTC, WebAssembly`,
+            contact: () => `Communication Channels:\n  Email:    xadrios@dev.null\n  GitHub:   github.com/xadrios\n  Matrix:   @xadrios:matrix.org\n  Signal:   [ENCRYPTED]`,
+            date: () => new Date().toString(),
+            clear: () => 'CLEAR',
+            hack: () => {
+                setTimeout(() => {
+                    document.body.classList.add('hacker-mode');
+                    setTimeout(() => document.body.classList.remove('hacker-mode'), 3000);
+                }, 500);
+                return `Initializing brute force...\nBypassing firewall...\nAccessing mainframe...\n\nJust kidding. This is a portfolio site.`;
+            }
+        };
+        
+        terminalInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const command = terminalInput.value.trim();
+                terminalInput.value = '';
+                
+                // Add command line
+                const cmdLine = document.createElement('div');
+                cmdLine.className = 'terminal-line';
+                cmdLine.innerHTML = `<span class="terminal-prompt">xadrios@dev:~$</span> <span class="terminal-command">${command}</span>`;
+                terminalContent.appendChild(cmdLine);
+                
+                // Process command
+                if (command) {
+                    if (commands[command]) {
+                        const result = commands[command]();
+                        if (result === 'CLEAR') {
+                            terminalContent.innerHTML = '';
+                        } else {
+                            const outputLine = document.createElement('div');
+                            outputLine.className = 'terminal-output';
+                            outputLine.innerHTML = result.replace(/\n/g, '<br>');
+                            terminalContent.appendChild(outputLine);
+                        }
+                    } else {
+                        const errorLine = document.createElement('div');
+                        errorLine.className = 'terminal-error';
+                        errorLine.textContent = `Command not found: ${command}. Type 'help' for available commands.`;
+                        terminalContent.appendChild(errorLine);
+                    }
+                }
+                
+                terminalContent.scrollTop = terminalContent.scrollHeight;
+            }
+        });
+
+        // ScrollTrigger for Skills
+        gsap.utils.toArray('.skill-fill').forEach(bar => {
+            const width = bar.getAttribute('data-width');
+            gsap.to(bar, {
+                width: width + '%',
+                duration: 1.5,
+                ease: "power2.out",
+                scrollTrigger: {
+                    trigger: bar,
+                    start: "top 80%",
+                    toggleActions: "play none none reverse"
+                }
+            });
+        });
+
+        // Project Cards Animation
+        gsap.from('.project-card', {
+            scrollTrigger: {
+                trigger: '#projects',
+                start: "top 70%"
+            },
+            y: 50,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: "power3.out"
+        });
+
+        // Floating Code Animation
+        gsap.to('#floating-code', {
+            y: -20,
+            duration: 3,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut"
+        });
+
+        // Konami Code Easter Egg
+        let konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        let konamiIndex = 0;
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === konamiCode[konamiIndex]) {
+                konamiIndex++;
+                if (konamiIndex === konamiCode.length) {
+                    activateGodMode();
+                    konamiIndex = 0;
+                }
+            } else {
+                konamiIndex = 0;
+            }
+        });
+        
+        function activateGodMode() {
+            const toast = document.getElementById('konami-toast');
+            gsap.to(toast, { x: 0, duration: 0.5, ease: "back.out" });
+            setTimeout(() => {
+                gsap.to(toast, { x: 400, duration: 0.5, ease: "power2.in" });
+            }, 3000);
+            
+            // Matrix speed up
+            matrixArray.push('👾', '🎮', '💻', '⚡', '🚀');
+        }
+
+        // Hacker Mode Toggle
+        document.getElementById('hacker-mode-toggle').addEventListener('click', () => {
+            document.body.classList.toggle('hacker-mode');
+        });
+
+        // Last deployment date
+        document.getElementById('last-deploy').textContent = new Date().toLocaleString();
+
+        // Contact Form
+        document.getElementById('contact-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Packet transmitted successfully! Response time: 0.42ms');
+        });
+
+        // Binary Rain in Background (additional effect)
+        function createBinaryDrop() {
+            const drop = document.createElement('div');
+            drop.className = 'binary-bg';
+            drop.style.left = Math.random() * 100 + 'vw';
+            drop.style.top = '-50px';
+            drop.textContent = Math.random() > 0.5 ? '1' : '0';
+            drop.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            document.body.appendChild(drop);
+            
+            gsap.to(drop, {
+                top: '100vh',
+                opacity: 0,
+                duration: Math.random() * 5 + 5,
+                ease: "none",
+                onComplete: () => drop.remove()
+            });
+        }
+        
+        setInterval(createBinaryDrop, 100);
+
+        // Smooth scroll for nav links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
